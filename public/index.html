@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Habilita: radar de editais</title>
+<style>
+:root{--azul:#0b2545;--dourado:#c9a227;--creme:#faf6ec;--texto:#1d1d1d}
+body{margin:0;font-family:system-ui,sans-serif;background:var(--creme);color:var(--texto)}
+header{background:var(--azul);color:var(--creme);padding:16px}
+main{padding:16px;max-width:900px;margin:auto}
+form{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px}
+input,select,button{padding:8px;font-size:15px}
+button{background:var(--dourado);border:0;cursor:pointer;font-weight:600}
+.card{background:#fff;border-left:4px solid var(--dourado);padding:12px;margin-bottom:10px}
+.card small{color:#555}
+</style>
+</head>
+<body>
+<header><strong>Habilita</strong> · radar de editais</header>
+<main>
+<form id="f">
+  <input name="q" placeholder="Palavras-chave (vírgula)" size="32">
+  <select name="uf"><option>CE</option><option>BR</option></select>
+  <select name="dias"><option value="7">7 dias</option><option value="15">15 dias</option><option value="30">30 dias</option></select>
+  <button>Buscar</button>
+</form>
+<div id="out"></div>
+</main>
+<script>
+const out = document.getElementById("out")
+document.getElementById("f").addEventListener("submit", async (e) => {
+  e.preventDefault()
+  const p = new URLSearchParams(new FormData(e.target))
+  out.textContent = "Buscando..."
+  try {
+    const r = await fetch("/api/editais?" + p)
+    const j = await r.json()
+    if (!r.ok) { out.textContent = "Erro: " + (j.erro || r.status); return }
+    out.innerHTML = `<p>${j.total} edital(is) encontrado(s)</p>` + j.editais.map(e =>
+      `<div class="card"><strong>${e.objeto ?? "Sem objeto"}</strong><br><small>${e.orgao ?? ""} · ${e.uf ?? ""} · ${e.valor ? "R$ " + Number(e.valor).toLocaleString("pt-BR") : ""}</small></div>`).join("")
+  } catch (err) { out.textContent = "Falha na busca: " + err }
+})
+</script>
+</body>
+</html>
